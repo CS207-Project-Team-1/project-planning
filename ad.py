@@ -6,6 +6,7 @@ class Expression(object):
     graph. Everything should be one of these.'''
     def __init__(self, grad=False):
         self.grad = grad
+        self.children = []
 
     def eval(self, feed_dict):
         '''Evaluates the entire computation graph given a dictionary of
@@ -73,6 +74,12 @@ class Expression(object):
         except AttributeError:
             return Division(Constant(other), self, grad=self.grad)
 
+    def sin(self):
+        return Sin(self)
+    
+    def cos(self):
+        return Cos(self)
+
 
 class Variable(Expression):
     def __init__(self, name, grad=True):
@@ -106,12 +113,21 @@ class Constant(Expression):
         return 0
 
 
+class Unop(Expression):
+    '''Utilities common to all unary operations in the form Op(a)'''
+    def __init__(self, expr1, grad=False):
+        super().__init__(grad=grad)
+        self.expr1 = expr1
+        self.children = [self.expr1]
+
+
 class Binop(Expression):
     '''Utilities common to all binary operations in the form Op(a, b)'''
     def __init__(self, expr1, expr2, grad=False):
         super().__init__(grad=grad)
         self.expr1 = expr1
         self.expr2 = expr2
+        self.children = [self.expr1, self.expr2]
 
 
 class Addition(Binop):
@@ -185,3 +201,62 @@ class Division(Binop):
             d_cache_dict[id(self)] = (d1 / res2) - (d2 * res1 / (res2 * res2))
         return d_cache_dict[id(self)]
 
+
+class Sin(Unop):
+    def _eval(self, feed_dict, cache_dict):
+        if id(self) not in cache_dict:
+            res1 = self.expr1._eval(feed_dict, cache_dict)
+            cache_dict[id(self)] = np.sin(res1)
+        return cache_dict[id(self)]
+    
+    def _d(self, feed_dict, e_cache_dict, d_cache_dict):
+        if id(self) not in d_cache_dict:
+            res1 = self.expr1._eval(feed_dict, e_cache_dict)
+            d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
+            d_cache_dict[id(self)] = np.cos(res1) * d1 
+        return d_cache_dict[id(self)]
+
+
+class Cos(Unop):
+    def _eval(self, feed_dict, cache_dict):
+        if id(self) not in cache_dict:
+            res1 = self.expr1._eval(feed_dict, cache_dict)
+            cache_dict[id(self)] = np.cos(res1)
+        return cache_dict[id(self)]
+    
+    def _d(self, feed_dict, e_cache_dict, d_cache_dict):
+        if id(self) not in d_cache_dict:
+            res1 = self.expr1._eval(feed_dict, e_cache_dict)
+            d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
+            d_cache_dict[id(self)] = -np.sin(res1) * d1 
+        return d_cache_dict[id(self)]
+
+
+class Exp(Unop):
+    def _eval(self, feed_dict, cache_dict):
+        if id(self) not in cache_dict:
+            res1 = self.expr1._eval(feed_dict, cache_dict)
+            cache_dict[id(self)] = np.exp(res1)
+        return cache_dict[id(self)]
+    
+    def _d(self, feed_dict, e_cache_dict, d_cache_dict):
+        if id(self) not in d_cache_dict:
+            res1 = self.expr1._eval(feed_dict, e_cache_dict)
+            d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
+            d_cache_dict[id(self)] = np.exp(res1) * d1 
+        return d_cache_dict[id(self)]
+
+
+class Log(Unop):
+    def _eval(self, feed_dict, cache_dict):
+        if id(self) not in cache_dict:
+            res1 = self.expr1._eval(feed_dict, cache_dict)
+            cache_dict[id(self)] = np.log(res1)
+        return cache_dict[id(self)]
+    
+    def _d(self, feed_dict, e_cache_dict, d_cache_dict):
+        if id(self) not in d_cache_dict:
+            res1 = self.expr1._eval(feed_dict, e_cache_dict)
+            d1 = self.expr1._d(feed_dict, e_cache_dict, d_cache_dict)
+            d_cache_dict[id(self)] = d1 / res1 
+        return d_cache_dict[id(self)]
