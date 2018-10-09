@@ -61,6 +61,18 @@ class Expression(object):
         # TODO: Multiplication not commutative if we enable matrix support
         return self.__mul__(other)
     
+    def __div__(self, other):
+        try:
+            return Division(self, other, grad=(other.grad and self.grad))
+        except AttributeError:
+            return Division(self, Constant(other), grad=self.grad)
+
+    def __rdiv__(self, other):
+        try:
+            return Division(other, self, grad=(other.grad and self.grad))
+        except AttributeError:
+            return Division(Constant(other), self, grad=self.grad)
+
 
 class Variable(Expression):
     def __init__(self, name, grad=True):
