@@ -76,7 +76,7 @@ class Binop(Expression):
         super().__init__(grad=grad)
         self.expr1 = expr1
         self.expr2 = expr2
-    
+
 
 class Addition(Binop):
     '''Addition, in the form A + B'''
@@ -89,11 +89,7 @@ class Addition(Binop):
 
 
 class Subtraction(Binop):
-    def __init__(self, expr1, expr2, grad=False):
-        super().__init__(grad=grad)
-        self.expr1 = expr1
-        self.expr2 = expr2
-
+    '''Subtraction, in the form A - B'''
     def _eval(self, feed_dict, cache_dict):
         if id(self) not in cache_dict:
             res1 = self.expr1._eval(feed_dict, cache_dict)
@@ -103,11 +99,7 @@ class Subtraction(Binop):
 
 
 class Multiplication(Binop):
-    def __init__(self, expr1, expr2, grad=False):
-        super().__init__(grad=grad)
-        self.expr1 = expr1
-        self.expr2 = expr2
-
+    '''Multiplication, in the form A * B'''
     def _eval(self, feed_dict, cache_dict):
         if id(self) not in cache_dict:
             res1 = self.expr1._eval(feed_dict, cache_dict)
@@ -117,11 +109,7 @@ class Multiplication(Binop):
 
 
 class Division(Binop):
-    def __init__(self, expr1, expr2, grad=False):
-        super().__init__(grad=grad)
-        self.expr1 = expr1
-        self.expr2 = expr2
-
+    '''Division, in the form A / B'''
     def _eval(self, feed_dict, cache_dict):
         if id(self) not in cache_dict:
             res1 = self.expr1._eval(feed_dict, cache_dict)
