@@ -87,7 +87,6 @@ class Expression(object):
         return Exp(self)
 
 
-
 class Variable(Expression):
     def __init__(self, name, grad=True):
         self.grad = grad
